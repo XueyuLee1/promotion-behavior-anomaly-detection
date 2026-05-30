@@ -24,7 +24,7 @@ The current version uses user-level tabular behavior features, such as browsing 
 
 This tabular representation makes the first version easy to run, inspect, and explain. It also provides a baseline before moving to relational or temporal representations.
 
-The current synthetic version is a controlled MVP for validating the pipeline. Real-data validation is the next step, with the main direction being event-level view/cart/purchase/session behavior from the Kaggle Multi-Category E-commerce Behavior Dataset. The long-term direction is to move from tabular anomaly screening to event-level behavior modeling and graph/tensor anomaly detection.
+The current synthetic version is a controlled MVP for validating the pipeline. Real-data validation is the next step, with the main direction being event-level view/cart/remove-from-cart/purchase/session behavior from the Kaggle Multi-Category E-commerce Behavior Dataset. The long-term direction is to move from tabular anomaly screening to event-level behavior modeling and graph/tensor anomaly detection.
 
 ## Connection to Missing-Value Anomaly Detection
 
@@ -94,6 +94,7 @@ These representations are relevant because e-commerce interaction data is natura
 ## Next Steps
 
 - Validate the pipeline on sampled Kaggle Multi-Category event-level behavior data.
+- Aggregate view, cart, purchase, and session events into user-level features.
 - Compare additional anomaly detection algorithms.
 - Build a user-product-coupon graph representation.
 - Add graph-based anomaly detection methods.

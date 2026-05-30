@@ -4,7 +4,7 @@
 
 This repository is an introductory, research-oriented prototype for **promotion-period user behavior anomaly detection** in e-commerce scenarios such as 618.
 
-Current status: Version 0.1 is a synthetic-data MVP for controlled pipeline validation. Real-data validation is planned as Version 0.2/0.3.
+Current status: Version 0.1 is a synthetic-data MVP for controlled pipeline validation. The next planned step is real event-level validation with the Kaggle Multi-Category E-commerce Behavior Dataset.
 
 Recommended reading order: `README.md` -> `docs/research_notes.md` -> `results/actionable_anomaly_report.md` -> `docs/real_data_roadmap.md`.
 
@@ -95,7 +95,7 @@ Synthetic user types:
 
 ### Real Data Later
 
-The synthetic data is only used to make the first version runnable and easy to inspect. A future version should use real or public e-commerce promotion data, such as user behavior logs around a large campaign.
+The synthetic data is only used to make the first version runnable and easy to inspect. The main next real-data step is to use sampled event-level behavior logs from the Kaggle Multi-Category E-commerce Behavior Dataset.
 
 ## Current MVP and Real-Data Roadmap
 
@@ -109,7 +109,7 @@ The rule-based interpretation layer uses transparent quantile-based heuristics f
 
 ### Next Stage: Kaggle Event-Level Behavior Validation
 
-The main next real-data step is the Kaggle Multi-Category E-commerce Behavior Dataset because it best matches the project research question. It contains event-level view, cart, purchase, session, product, time, and price information.
+The main next real-data step is the Kaggle Multi-Category E-commerce Behavior Dataset because it best matches the project research question. It contains event-level view, cart, remove-from-cart, purchase, session, product, time, and price information.
 
 The planned workflow is to sample a manageable subset of event-level data, aggregate events into user-level features, and run the same anomaly screening pipeline on real behavior logs. Candidate features include view count, cart count, purchase count, session count, total spending, conversion rate, cart-to-purchase rate, product diversity, and days since last purchase.
 
@@ -280,10 +280,10 @@ The graph extension blueprint is documented in `docs/graph_extension.md`.
 
 ## Future Work
 
-- Use real e-commerce promotion data.
-- Build a user-product-coupon graph.
+- Validate the pipeline on a sampled Kaggle event-level behavior dataset.
+- Aggregate view, cart, purchase, and session events into user-level features.
+- Build a user-product interaction graph from event logs.
 - Explore graph-based anomaly detection.
-- Add temporal behavior modeling.
 - Represent user-product-time-behavior as a sparse tensor.
 - Compare additional unsupervised anomaly detection methods.
 

@@ -35,6 +35,7 @@ This dataset is the best match for the current research question because it cont
 
 - view events
 - cart events
+- remove-from-cart events
 - purchase events
 - `user_id`
 - `user_session`
@@ -42,7 +43,7 @@ This dataset is the best match for the current research question because it cont
 - `event_time`
 - `price`
 
-These fields directly support promotion-period user behavior screening based on view, cart, purchase, session, product, time, and spending patterns.
+These fields directly support promotion-period user behavior screening based on view, cart, remove-from-cart, purchase, session, product, time, and spending patterns.
 
 ## Sampling Strategy
 
@@ -81,6 +82,7 @@ After aggregation, the same preprocessing, clustering, anomaly detection, missin
 This dataset can support:
 
 - event-level view/cart/purchase behavior
+- remove-from-cart behavior
 - session-level behavior
 - user-product interactions
 - conversion behavior
@@ -108,7 +110,7 @@ After event-level validation, the next research direction is to move beyond user
 Possible graph representation:
 
 - nodes: users and products
-- edges: view, cart, purchase
+- edges: view, cart, remove-from-cart, purchase
 - edge attributes: event time, price, session id, behavior type
 
 Possible tensor representation:
