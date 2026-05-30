@@ -99,7 +99,7 @@ The synthetic data is only used to make the first version runnable and easy to i
 
 ## Current MVP and Real-Data Roadmap
 
-### Version 0.1: Synthetic MVP
+### Current Stage: Synthetic Controlled MVP
 
 The current version uses synthetic data for controlled pipeline validation. Synthetic data makes it possible to test sparse and missing behavior signals, the missingness sensitivity experiment, the pseudo-anomaly sanity check, and the actionable anomaly interpretation layer in a reproducible way.
 
@@ -107,23 +107,21 @@ This is not a claim of real fraud detection. It is a controlled prototype for va
 
 The rule-based interpretation layer uses transparent quantile-based heuristics for Version 0.1. These thresholds are not claimed to be universal and should be recalibrated on real data.
 
-### Version 0.2: Real Transaction Smoke Test
+### Next Stage: Kaggle Event-Level Behavior Validation
 
-The next version will use the UCI Online Retail dataset as a real transaction-level smoke test. This dataset can support features such as purchase count, total spending, average order value, product diversity, and a return or cancellation proxy.
+The main next real-data step is the Kaggle Multi-Category E-commerce Behavior Dataset because it best matches the project research question. It contains event-level view, cart, purchase, session, product, time, and price information.
 
-This version will test whether the current pipeline can run on real public transaction data, even though the dataset does not directly include browsing, cart, or coupon behavior.
+The planned workflow is to sample a manageable subset of event-level data, aggregate events into user-level features, and run the same anomaly screening pipeline on real behavior logs. Candidate features include view count, cart count, purchase count, session count, total spending, conversion rate, cart-to-purchase rate, product diversity, and days since last purchase.
 
-### Version 0.3: Event-Level Behavior Data
+This stage will test whether the workflow transfers from synthetic data to real event-level e-commerce behavior.
 
-The third version will use the Kaggle Multi-Category E-commerce Behavior Dataset for event-level user behavior, including view, cart, purchase, session, product, time, and price information.
+### Later Stage: User-Product Graph and Tensor Extension
 
-This version is the closest match to the current research question because it can support features such as pages viewed, cart additions, purchase count, conversion rate, session count, and total spending.
+The longer-term direction is to move from tabular anomaly screening toward user-product graph and tensor representations. Event-level behavior can be used to build user-product interaction graphs and user x product x time x behavior tensors.
 
-### Version 0.4: Graph and Tensor Extension
+UCI Online Retail may be used as an optional lightweight transaction-level fallback smoke test. Olist Brazilian E-Commerce may be used as a later graph-oriented reference dataset, but neither is the main immediate path.
 
-The fourth version will move toward user-product-coupon graph anomaly detection and user-product-time-behavior tensor representation. This stage may use Olist Brazilian E-Commerce data or event-level graph data to study relational behavior patterns among users, products, sellers, coupons, orders, payments, or reviews.
-
-See `docs/real_data_roadmap.md` for a detailed dataset comparison.
+See `docs/real_data_roadmap.md` for the simplified real-data plan.
 
 ## Sparse and Missing Behavior Signals
 
