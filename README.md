@@ -4,11 +4,17 @@
 
 This repository is an introductory, research-oriented prototype for **promotion-period user behavior anomaly detection** in e-commerce scenarios such as 618.
 
+Current status: Version 0.1 is a synthetic-data MVP for controlled pipeline validation. Real-data validation is planned as Version 0.2/0.3.
+
+Recommended reading order: `README.md` -> `docs/research_notes.md` -> `results/actionable_anomaly_report.md` -> `docs/real_data_roadmap.md`.
+
 The project starts from a practical question:
 
 > When user behavior during a large promotion is sparse, partially missing, and unlabeled, can we identify users whose behavior deviates from the majority in an interpretable way?
 
 The current version is a **tabular unsupervised anomaly detection prototype**. It uses synthetic user-level behavior data to validate the end-to-end pipeline before moving to real promotion data. It is not a production fraud detection system.
+
+The final output is not a fraud label, but a prioritized review list with anomaly type, evidence, and suggested analyst action.
 
 ## What This Project Is Trying to Study
 
@@ -56,6 +62,8 @@ Research-oriented elements include:
 ### Synthetic Demo Data
 
 The current version generates about 1,000 synthetic users with behavior patterns inspired by promotion-period e-commerce activity.
+
+The synthetic setting is intentionally used to test whether the full workflow works before introducing real-data noise and field mismatch.
 
 Raw features include:
 
