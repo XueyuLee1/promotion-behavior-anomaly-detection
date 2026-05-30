@@ -51,6 +51,8 @@ The interpretation layer bridges anomaly detection output and real-world decisio
 
 This helps answer what an analyst could do after anomaly detection, such as reviewing high-value users, checking low-conversion behavior, inspecting promotion-abuse-like patterns, or investigating missingness-related data quality issues.
 
+For Version 0.1, the interpretation layer uses transparent quantile-based heuristics. These rules are meant to be readable and easy to inspect, not universal decision rules. They should be recalibrated when real data is introduced.
+
 This also motivates future graph-based analysis. Some follow-up actions require relational data that is not available in the current tabular prototype, such as user-product-coupon-device connections, repeated coupon use across products, or abnormal interaction bursts across sessions.
 
 ## Connection to Graph Anomaly Detection
@@ -81,11 +83,13 @@ These representations are relevant because e-commerce interaction data is natura
 ## Limitations
 
 - The current data is synthetic.
+- Synthetic data is used for controlled validation, not evidence of real promotion behavior.
 - There are no real ground-truth anomaly labels.
 - The models are simple baselines: K-means, PCA, and Isolation Forest.
 - The current version uses aggregated user-level tabular features only.
 - The anomaly categories are rule-based interpretations, not verified labels.
 - The project does not claim to detect fraud.
+- Real-data validation is the next step.
 
 ## Next Steps
 

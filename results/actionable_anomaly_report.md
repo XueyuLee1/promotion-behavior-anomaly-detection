@@ -39,7 +39,7 @@ The purpose is to help analysts decide what to inspect next during an e-commerce
 | promotion_abuse_like_anomaly | Promotion-abuse-like behavior may be present, but this is not confirmed fraud.                    | Send to manual review or a downstream risk-scoring process; do not directly label as fraud. |
 | high_activity_anomaly        | User shows very high activity that could reflect a power user, automation, or abnormal traffic.   | Check device, IP, session, and timing patterns when real event-level data is available.     |
 | data_quality_anomaly         | The anomaly is strongly related to missing behavior signals.                                      | Check data collection, logging coverage, delayed records, and the missingness mechanism.    |
-| mixed_anomaly                | Multiple unusual behavior patterns appear at the same time.                                       | Prioritize for analyst review and inspect user-level behavior history in more detail.       |
+| mixed_anomaly                | Multiple unusual behavior patterns appear at the same time.                                       | Treat as a higher-priority review case and inspect user-level behavior history in detail.   |
 
 ## Example Review List
 

@@ -14,6 +14,8 @@ The project starts from a practical question:
 
 The current version is a **tabular unsupervised anomaly detection prototype**. It uses synthetic user-level behavior data to validate the end-to-end pipeline before moving to real promotion data. It is not a production fraud detection system.
 
+The project turns unsupervised anomaly detection into an analyst review workflow: anomaly detection -> anomaly type -> evidence -> suggested action.
+
 The final output is not a fraud label, but a prioritized review list with anomaly type, evidence, and suggested analyst action.
 
 ## What This Project Is Trying to Study
@@ -63,7 +65,7 @@ Research-oriented elements include:
 
 The current version generates about 1,000 synthetic users with behavior patterns inspired by promotion-period e-commerce activity.
 
-The synthetic setting is intentionally used to test whether the full workflow works before introducing real-data noise and field mismatch.
+The synthetic setting is intentionally used to test whether the full workflow works before introducing real-data noise and field mismatch. It is used for controlled validation, not as evidence of real promotion behavior.
 
 Raw features include:
 
@@ -102,6 +104,8 @@ The synthetic data is only used to make the first version runnable and easy to i
 The current version uses synthetic data for controlled pipeline validation. Synthetic data makes it possible to test sparse and missing behavior signals, the missingness sensitivity experiment, the pseudo-anomaly sanity check, and the actionable anomaly interpretation layer in a reproducible way.
 
 This is not a claim of real fraud detection. It is a controlled prototype for validating the project structure and research workflow.
+
+The rule-based interpretation layer uses transparent quantile-based heuristics for Version 0.1. These thresholds are not claimed to be universal and should be recalibrated on real data.
 
 ### Version 0.2: Real Transaction Smoke Test
 
@@ -201,6 +205,8 @@ Example anomaly types include:
 - `data_quality_anomaly`
 - `mixed_anomaly`
 
+`mixed_anomaly` means multiple abnormal behavior signals overlap. It should be treated as a higher-priority review case rather than forced into a single category.
+
 The goal is to help analysts decide what to investigate next. For example, a high-value anomaly may support VIP or retention analysis, while a promotion-abuse-like anomaly may require manual review or downstream risk scoring. This interpretation layer makes the prototype more useful for e-commerce promotion analysis while still avoiding any claim of confirmed fraud detection.
 
 ## Outputs
@@ -265,12 +271,14 @@ The graph extension blueprint is documented in `docs/graph_extension.md`.
 ## Limitations
 
 - The current dataset is synthetic.
+- Synthetic data is used for controlled validation, not evidence of real promotion behavior.
 - There are no real ground-truth anomaly labels.
 - The project does not claim to detect real fraud.
 - Unsupervised anomaly results require business validation.
 - The current version uses aggregated tabular features only.
 - The anomaly categories are rule-based interpretations, not verified labels.
 - The pseudo-anomaly experiment is a sanity check, not a real benchmark.
+- Real-data validation is the next step.
 
 ## Future Work
 
