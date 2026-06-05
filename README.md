@@ -4,9 +4,9 @@
 
 This repository is an introductory, research-oriented prototype for **promotion-period user behavior anomaly detection** in e-commerce scenarios such as 618.
 
-Current status: Version 0.1 is a synthetic-data MVP for controlled pipeline validation. The next planned step is real event-level validation with the Kaggle Multi-Category E-commerce Behavior Dataset.
+Current status: the synthetic-data MVP is complete, and a separate real-data validation path has been added for RecSys Challenge 2025 / Synerise event logs. A 300k-event Synerise sample can be run locally to validate the workflow on real event-level behavior data.
 
-Recommended reading order: `README.md` -> `docs/research_notes.md` -> `results/actionable_anomaly_report.md` -> `docs/real_data_roadmap.md`.
+Recommended reading order: `README.md` -> `docs/research_notes.md` -> `results/actionable_anomaly_report.md` -> `docs/real_data_roadmap.md` -> `docs/real_data_integration.md`.
 
 The project starts from a practical question:
 
@@ -93,9 +93,21 @@ Synthetic user types:
 - `promotion_abuse_like`
 - `high_activity_anomaly`
 
-### Real Data Later
+### Real Event-Level Data
 
-The synthetic data is only used to make the first version runnable and easy to inspect. The main next real-data step is to use sampled event-level behavior logs from the Kaggle Multi-Category E-commerce Behavior Dataset.
+The synthetic data is used to make the first version runnable and easy to inspect. The real-data path uses sampled event-level behavior logs from RecSys Challenge 2025 / Synerise.
+
+The repository now includes a separate real-data adapter for event-level CSV or parquet logs. The recommended primary real dataset is RecSys Challenge 2025 / Synerise because it contains real online retailer interactions such as page visits, search queries, add-to-cart, remove-from-cart, and product-buy events. RetailRocket can be used as a simpler fallback.
+
+## Real Event-Level Data Integration
+
+The synthetic pipeline remains available through `src/run_pipeline.py`. A separate real-data pipeline is provided in `src/run_real_data_pipeline.py` so that raw event logs can be aggregated into user-level features and passed through the same style of anomaly screening workflow.
+
+Raw real datasets are not included in this GitHub repository. Download the dataset manually and place it under `data/raw/`. The output is still an anomaly review list, not a fraud decision.
+
+For Synerise, place the official parquet files under `data/raw/synerise/`, including `product_buy.parquet`, `add_to_cart.parquet`, `remove_from_cart.parquet`, `page_visit.parquet`, `search_query.parquet`, and `product_properties.parquet`.
+
+The full real-data review list is generated locally and is not committed by default. The summary report and PCA figure can be regenerated from the raw dataset.
 
 ## Current MVP and Real-Data Roadmap
 
@@ -107,11 +119,13 @@ This is not a claim of real fraud detection. It is a controlled prototype for va
 
 The rule-based interpretation layer uses transparent quantile-based heuristics for Version 0.1. These thresholds are not claimed to be universal and should be recalibrated on real data.
 
-### Next Stage: Kaggle Event-Level Behavior Validation
+### Real Event-Level Behavior Validation
 
-The main next real-data step is the Kaggle Multi-Category E-commerce Behavior Dataset because it best matches the project research question. It contains event-level view, cart, remove-from-cart, purchase, session, product, time, and price information.
+The main real-data validation path is RecSys Challenge 2025 / Synerise because it is recent, real, and closely matched to event-level user behavior modeling. It contains behavior such as page visits, search queries, add-to-cart, remove-from-cart, and product-buy events. RetailRocket is a simpler fallback with view, add-to-cart, and transaction events.
 
-The planned workflow is to sample a manageable subset of event-level data, aggregate events into user-level features, and run the same anomaly screening pipeline on real behavior logs. Candidate features include view count, cart count, purchase count, session count, total spending, conversion rate, cart-to-purchase rate, product diversity, and days since last purchase.
+The workflow samples a manageable subset of event-level data, aggregates events into user-level features, and runs the same anomaly screening pipeline on real behavior logs. Candidate features include view count, cart count, purchase count, search count, remove-from-cart count, price-signal features, conversion rate, cart-to-purchase rate, product diversity, and days since last purchase.
+
+For Synerise, the current multi-file loader splits `sample_n_rows` approximately evenly across event files. This is useful for workflow validation, but the resulting behavior ratios should not be interpreted as full-site business conversion rates.
 
 This stage will test whether the workflow transfers from synthetic data to real event-level e-commerce behavior.
 
@@ -223,6 +237,15 @@ Running the pipeline creates:
 - `figures/missingness_comparison.png`
 - `figures/pseudo_anomaly_scores.png`
 
+Running the real-data validation pipeline can also create:
+
+- `data/processed/real_user_features.csv`
+- `results/real_user_behavior_with_anomalies.csv`
+- `results/real_data_summary.md`
+- `figures/real_data_pca_anomalies.png`
+
+Raw real datasets should be placed under `data/raw/` and should not be uploaded to GitHub.
+
 ## Preliminary Findings
 
 The generated reports summarize:
@@ -280,8 +303,9 @@ The graph extension blueprint is documented in `docs/graph_extension.md`.
 
 ## Future Work
 
-- Validate the pipeline on a sampled Kaggle event-level behavior dataset.
-- Aggregate view, cart, purchase, and session events into user-level features.
+- Scale and inspect the RecSys Challenge 2025 / Synerise validation beyond the current sampled workflow.
+- Improve sampling strategies and raw event-history inspection for real event logs.
+- Aggregate additional real event fields into user-level features when available.
 - Build a user-product interaction graph from event logs.
 - Explore graph-based anomaly detection.
 - Represent user-product-time-behavior as a sparse tensor.
@@ -307,3 +331,23 @@ Run the full pipeline:
 ```bash
 python src/run_pipeline.py
 ```
+
+Run a real-data format smoke test with the small fixture:
+
+```bash
+python src/run_real_data_pipeline.py \
+  --input-file data/fixtures/mini_event_log.csv \
+  --dataset-type synerise \
+  --loader-smoke-test
+```
+
+Run the real-data pipeline after placing a CSV or parquet event log under `data/raw/`:
+
+```bash
+python src/run_real_data_pipeline.py \
+  --dataset-type synerise \
+  --input-file data/raw/synerise \
+  --sample-n-rows 100000
+```
+
+See `docs/real_data_integration.md` for field mapping, dataset limitations, and interpretation guidance.
