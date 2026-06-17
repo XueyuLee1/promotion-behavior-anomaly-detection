@@ -16,7 +16,7 @@ data/processed/
 kaggle.json
 
 # Full real-data review lists can be regenerated locally from raw data
-results/real_user_behavior_with_anomalies.csv
+results/real_user_behavior_with_anomalies*.csv
 
 # Local system files
 .DS_Store

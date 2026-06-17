@@ -1,91 +1,55 @@
 # Promotion Behavior Anomaly Detection under Missing and Sparse User Signals
 
-## Project Overview
+An interpretable e-commerce user behavior anomaly screening workflow for promotion-period behavior analysis.
 
-This repository is an introductory, research-oriented prototype for **promotion-period user behavior anomaly detection** in e-commerce scenarios such as 618.
+This project is **not a fraud detector**. It identifies behaviorally unusual users and turns unsupervised anomaly detection output into a prioritized analyst review list with:
 
-Current status: the synthetic-data MVP is complete, and a separate real-data validation path has been added for RecSys Challenge 2025 / Synerise event logs. A 300k-event Synerise sample can be run locally to validate the workflow on real event-level behavior data.
+- anomaly label
+- anomaly type
+- evidence
+- suggested analyst action
 
-Recommended reading order: `README.md` -> `docs/research_notes.md` -> `results/actionable_anomaly_report.md` -> `docs/real_data_roadmap.md` -> `docs/real_data_integration.md`.
+## Current Status
 
-The project starts from a practical question:
+The project includes two validation paths:
 
-> When user behavior during a large promotion is sparse, partially missing, and unlabeled, can we identify users whose behavior deviates from the majority in an interpretable way?
+1. **Synthetic controlled MVP:** validates the full workflow under sparse and partially missing user behavior signals.
+2. **Real event-log validation:** runs the workflow on a 300k-event sample from the RecSys Challenge 2025 / Synerise dataset.
 
-The current version is a **tabular unsupervised anomaly detection prototype**. It uses synthetic user-level behavior data to validate the end-to-end pipeline before moving to real promotion data. It is not a production fraud detection system.
+Raw real datasets and full generated real-user review lists are not uploaded to GitHub. The repository includes code, documentation, figures, and summary reports.
 
-The project turns unsupervised anomaly detection into an analyst review workflow: anomaly detection -> anomaly type -> evidence -> suggested action.
+Recommended reading order:
 
-The final output is not a fraud label, but a prioritized review list with anomaly type, evidence, and suggested analyst action.
+`README.md` -> `results/real_data_summary.md` -> `docs/real_data_integration.md` -> `results/actionable_anomaly_report.md` -> `docs/research_notes.md`
 
-## What This Project Is Trying to Study
+## Problem
 
-Promotion-period behavior is different from ordinary shopping behavior. Users may browse heavily, add many products to the cart, use coupons intensively, purchase rarely, return items, or show unusually high activity in a short time window.
+Promotion-period e-commerce behavior can be sparse, partially missing, and unlabeled. Many users have few purchases, missing return/coupon signals, or incomplete behavioral histories.
 
-At the same time, real e-commerce behavior logs are often:
+The project asks:
 
-- sparse: many users have few purchases, few returns, or many zero-valued behavior signals
-- partially missing: discount usage or return records may be unavailable, delayed, or incomplete
-- unlabeled: there may be no reliable ground-truth anomaly or fraud labels
+> Can we screen users whose promotion-period behavior deviates from the majority and explain why they should be reviewed?
 
-This project studies how to build a simple, interpretable anomaly detection pipeline under these conditions.
+The goal is to support analyst triage, not to make final risk or fraud decisions.
 
-## Important Interpretation
+## Portfolio Highlights
 
-**Anomaly does not mean fraud.**
+- Built an end-to-end unsupervised ML workflow, not just a model demo.
+- Generated synthetic promotion-period user behavior with sparse and missing signals.
+- Added a real-data adapter for Synerise event-level parquet logs.
+- Aggregated event logs into user-level features from page visit, search, cart, remove-from-cart, and purchase events.
+- Applied K-means clustering, PCA visualization, and Isolation Forest anomaly detection.
+- Added missingness sensitivity analysis and a pseudo-anomaly sanity check.
+- Produced actionable anomaly interpretation with type, evidence, and suggested next action.
+- Saved a small real-data anomaly review sample for GitHub inspection while ignoring full generated review lists.
+- Added a lightweight unit test for the real event-log loader.
+- Kept raw data, processed data, and full real-user review lists out of GitHub.
 
-In this project, an anomaly means that a user's behavior differs from the majority pattern. A detected anomaly may be:
+## Data
 
-- a high-value customer
-- a low-conversion user with heavy browsing
-- a promotion-sensitive user
-- a high-return user
-- a high-activity user
-- a data-quality or missingness-related case
+### Synthetic Data
 
-Any real business conclusion would require further validation with domain knowledge and real data.
-
-## Why This Is Not Generic Customer Segmentation
-
-Generic customer segmentation usually focuses on grouping users for marketing, personalization, or customer management.
-
-This project is different because it focuses on **unusual behavior under sparse and missing promotion signals**. Clustering is used only as one part of the analysis. The main goal is to connect segmentation, missing-data handling, and unsupervised anomaly detection.
-
-Research-oriented elements include:
-
-1. Simulating sparse and partially missing behavior signals.
-2. Comparing imputation-only features with missingness-aware features.
-3. Using unsupervised anomaly detection because real anomaly labels are unavailable.
-4. Adding a pseudo-anomaly sanity check instead of claiming a real benchmark.
-5. Preparing a path toward graph and tensor representations of user-product-coupon behavior.
-
-## Dataset Strategy
-
-### Synthetic Demo Data
-
-The current version generates about 1,000 synthetic users with behavior patterns inspired by promotion-period e-commerce activity.
-
-The synthetic setting is intentionally used to test whether the full workflow works before introducing real-data noise and field mismatch. It is used for controlled validation, not as evidence of real promotion behavior.
-
-Raw features include:
-
-- `user_id`
-- `browsing_time`
-- `pages_viewed`
-- `cart_additions`
-- `purchase_count`
-- `total_spending`
-- `average_order_value`
-- `discount_usage_count`
-- `discount_ratio`
-- `return_count`
-- `days_since_last_purchase`
-- `session_count`
-- `user_type`
-
-The synthetic `user_type` field is used for sanity checking and interpretation only. It is not used as a supervised training label.
-
-Synthetic user types:
+The synthetic pipeline generates about 1,000 user-level records with behavior types such as:
 
 - `normal`
 - `high_value`
@@ -93,223 +57,127 @@ Synthetic user types:
 - `promotion_abuse_like`
 - `high_activity_anomaly`
 
-### Real Event-Level Data
+It includes sparse and missing behavior signals such as missing `discount_usage_count` and `return_count`.
 
-The synthetic data is used to make the first version runnable and easy to inspect. The real-data path uses sampled event-level behavior logs from RecSys Challenge 2025 / Synerise.
+### Real Event Data
 
-The repository now includes a separate real-data adapter for event-level CSV or parquet logs. The recommended primary real dataset is RecSys Challenge 2025 / Synerise because it contains real online retailer interactions such as page visits, search queries, add-to-cart, remove-from-cart, and product-buy events. RetailRocket can be used as a simpler fallback.
+The real-data path supports RecSys Challenge 2025 / Synerise event logs. The expected local files are:
 
-## Real Event-Level Data Integration
+- `product_buy.parquet`
+- `add_to_cart.parquet`
+- `remove_from_cart.parquet`
+- `page_visit.parquet`
+- `search_query.parquet`
+- `product_properties.parquet`
 
-The synthetic pipeline remains available through `src/run_pipeline.py`. A separate real-data pipeline is provided in `src/run_real_data_pipeline.py` so that raw event logs can be aggregated into user-level features and passed through the same style of anomaly screening workflow.
+Place them under:
 
-Raw real datasets are not included in this GitHub repository. Download the dataset manually and place it under `data/raw/`. The output is still an anomaly review list, not a fraud decision.
+```text
+data/raw/synerise/
+```
 
-For Synerise, place the official parquet files under `data/raw/synerise/`, including `product_buy.parquet`, `add_to_cart.parquet`, `remove_from_cart.parquet`, `page_visit.parquet`, `search_query.parquet`, and `product_properties.parquet`.
-
-The full real-data review list is generated locally and is not committed by default. The summary report and PCA figure can be regenerated from the raw dataset.
-
-## Current MVP and Real-Data Roadmap
-
-### Current Stage: Synthetic Controlled MVP
-
-The current version uses synthetic data for controlled pipeline validation. Synthetic data makes it possible to test sparse and missing behavior signals, the missingness sensitivity experiment, the pseudo-anomaly sanity check, and the actionable anomaly interpretation layer in a reproducible way.
-
-This is not a claim of real fraud detection. It is a controlled prototype for validating the project structure and research workflow.
-
-The rule-based interpretation layer uses transparent quantile-based heuristics for Version 0.1. These thresholds are not claimed to be universal and should be recalibrated on real data.
-
-### Real Event-Level Behavior Validation
-
-The main real-data validation path is RecSys Challenge 2025 / Synerise because it is recent, real, and closely matched to event-level user behavior modeling. It contains behavior such as page visits, search queries, add-to-cart, remove-from-cart, and product-buy events. RetailRocket is a simpler fallback with view, add-to-cart, and transaction events.
-
-The workflow samples a manageable subset of event-level data, aggregates events into user-level features, and runs the same anomaly screening pipeline on real behavior logs. Candidate features include view count, cart count, purchase count, search count, remove-from-cart count, price-signal features, conversion rate, cart-to-purchase rate, product diversity, and days since last purchase.
-
-For Synerise, the current multi-file loader splits `sample_n_rows` approximately evenly across event files. This is useful for workflow validation, but the resulting behavior ratios should not be interpreted as full-site business conversion rates.
-
-This stage will test whether the workflow transfers from synthetic data to real event-level e-commerce behavior.
-
-### Later Stage: User-Product Graph and Tensor Extension
-
-The longer-term direction is to move from tabular anomaly screening toward user-product graph and tensor representations. Event-level behavior can be used to build user-product interaction graphs and user x product x time x behavior tensors.
-
-UCI Online Retail may be used as an optional lightweight transaction-level fallback smoke test. Olist Brazilian E-Commerce may be used as a later graph-oriented reference dataset, but neither is the main immediate path.
-
-See `docs/real_data_roadmap.md` for the simplified real-data plan.
-
-## Sparse and Missing Behavior Signals
-
-The project explicitly simulates missing values in:
-
-- `discount_usage_count`
-- `return_count`
-
-It also creates missingness indicator features:
-
-- `discount_missing`
-- `return_missing`
-
-This design reflects a common issue in behavior data: a missing value is not always the same as zero. For example, a missing return count may mean no return, delayed return data, or incomplete data collection. The project therefore compares feature representations with and without missingness indicators.
-
-## Feature Engineering
-
-The pipeline creates interpretable user behavior features:
-
-- `conversion_rate = purchase_count / pages_viewed`
-- `cart_to_purchase_rate = purchase_count / cart_additions`
-- `spending_per_session = total_spending / session_count`
-- `discount_dependency = discount_usage_count / max(purchase_count, 1)`
-- `return_rate = return_count / max(purchase_count, 1)`
-
-Division by zero is handled safely. These features make the results easier to explain than raw counts alone.
+For Synerise, `sample_n_rows` is split approximately evenly across event files. This is useful for workflow validation, but it should not be interpreted as the natural traffic distribution of the full site.
 
 ## Methods
 
-### K-means Clustering
+The workflow uses:
 
-K-means is used to form rough user behavior segments. This helps describe whether users appear to fall into groups such as high-value, low-conversion, promotion-sensitive, or high-activity behavior profiles.
-
-### PCA Visualization
-
-PCA reduces the feature space to two dimensions for visualization. It is used to inspect cluster structure and the location of detected anomalies.
-
-### Isolation Forest
-
-Isolation Forest is used for unsupervised anomaly detection. It does not require ground-truth labels and is suitable for a first prototype where real anomaly labels are unavailable.
-
-### Missingness Sensitivity Experiment
-
-The project compares two feature settings:
-
-- imputation-only features
-- imputation plus missingness indicator features
-
-The experiment reports:
-
-- anomaly overlap rate
-- number of users whose anomaly label changes
-- synthetic user types most affected by missingness-aware modeling
-
-This makes the project closer to anomaly detection research under missing tabular signals.
-
-### Pseudo-Anomaly Sanity Check
-
-Because real anomaly labels are unavailable, the project includes a simple pseudo-anomaly check. It perturbs normal users by increasing activity, discount dependency, and return behavior, then checks whether Isolation Forest assigns stronger anomaly scores to these pseudo-anomalies.
-
-This is only a sanity check. It is not a real benchmark and should not be interpreted as evidence of real fraud detection performance.
-
-## What Happens After Anomaly Detection?
-
-The project outputs a prioritized review list, not a final fraud decision.
-
-Each detected anomaly receives:
-
-- an interpretable anomaly type
-- rule-based evidence
-- a suggested next action for analysts
-
-Example anomaly types include:
-
-- `high_value_anomaly`
-- `low_conversion_anomaly`
-- `promotion_abuse_like_anomaly`
-- `high_activity_anomaly`
-- `data_quality_anomaly`
-- `mixed_anomaly`
-
-`mixed_anomaly` means multiple abnormal behavior signals overlap. It should be treated as a higher-priority review case rather than forced into a single category.
-
-The goal is to help analysts decide what to investigate next. For example, a high-value anomaly may support VIP or retention analysis, while a promotion-abuse-like anomaly may require manual review or downstream risk scoring. This interpretation layer makes the prototype more useful for e-commerce promotion analysis while still avoiding any claim of confirmed fraud detection.
+- **Feature engineering:** conversion rate, cart-to-purchase rate, behavior sparsity, activity counts, product diversity, and price-signal features.
+- **Imputation and scaling:** handles missing numeric values and standardizes features.
+- **K-means clustering:** segments users into rough behavior groups.
+- **PCA:** visualizes high-dimensional user behavior features in 2D.
+- **Isolation Forest:** detects behaviorally unusual users without anomaly labels.
+- **Rule-based interpretation:** assigns anomaly type, evidence, and suggested action.
 
 ## Outputs
 
-Running the pipeline creates:
+Synthetic pipeline outputs:
 
-- `data/synthetic_promotion_user_behavior.csv`
-- `results/user_behavior_with_clusters_and_anomalies.csv`
 - `results/summary.md`
+- `results/actionable_anomaly_report.md`
 - `results/missingness_sensitivity.md`
 - `results/pseudo_anomaly_check.md`
-- `results/actionable_anomaly_report.md`
 - `figures/pca_clusters.png`
 - `figures/anomaly_pca.png`
 - `figures/feature_distributions.png`
 - `figures/missingness_comparison.png`
 - `figures/pseudo_anomaly_scores.png`
 
-Running the real-data validation pipeline can also create:
+Real-data validation outputs:
 
-- `data/processed/real_user_features.csv`
-- `results/real_user_behavior_with_anomalies.csv`
 - `results/real_data_summary.md`
+- `results/real_anomaly_review_sample.csv`
 - `figures/real_data_pca_anomalies.png`
 
-Raw real datasets should be placed under `data/raw/` and should not be uploaded to GitHub.
+The full real-user review list is generated locally as `results/real_user_behavior_with_anomalies.csv`, but it is ignored by Git. The small review sample is safe to inspect on GitHub.
 
-## Preliminary Findings
+## Real-Data Validation Result
 
-The generated reports summarize:
+The current real-data validation uses a 300k-event Synerise sample.
 
-- dataset size and synthetic user type distribution
-- K-means cluster profiles
-- cluster-wise anomaly rates and interpretations
-- normal vs anomalous user profile comparison
-- missingness sensitivity results
-- pseudo-anomaly sanity check results
+Summary:
 
-These findings are preliminary because the data is synthetic and there are no real ground-truth anomaly labels.
+- Events loaded: `300000`
+- Aggregated users: `40536`
+- Observed event types: `cart`, `purchase`, `remove_from_cart`, `search`, `view`
+- Isolation Forest anomaly rate: `8.0%`
 
-## Connection to Prof. Jicong Fan's Research Directions
+Top anomaly review categories:
 
-This project is designed to connect with several relevant research directions:
+- `low_conversion_anomaly`
+- `high_purchase_signal_anomaly`
+- `high_activity_anomaly`
+- `remove_from_cart_anomaly`
 
-- **Clustering:** K-means is used to segment promotion-period users by behavior.
-- **Anomaly detection:** Isolation Forest identifies behaviorally unusual users in an unsupervised setting.
-- **Tabular and missing data:** The pipeline studies sparse and partially missing user behavior signals with imputation and missingness indicators.
-- **Graph learning:** Future work can model users, products, coupons, and interactions as a heterogeneous graph.
-- **Matrix and tensor methods:** User-product, user-coupon, and user-product-time behavior can be represented as sparse matrices or tensors.
+These are review categories, not confirmed fraud labels.
 
-The current version should be understood as a tabular starting point. The longer-term direction is graph-based and tensor-based anomaly detection for promotion-period user behavior.
+See `results/real_data_summary.md` for details.
+See `results/real_anomaly_review_sample.csv` for a compact, anonymized example of the generated analyst review queue.
 
-## Graph and Tensor Extension
+## What Happens After Anomaly Detection?
 
-A future graph version could represent:
+The project outputs a review queue. Each flagged user receives:
 
-- nodes: users, products, coupons
-- edges: view, cart, purchase, coupon use, return
-- edge attributes: time, price, discount ratio, quantity
+- `anomaly_type`
+- `anomaly_evidence`
+- `suggested_action`
 
-Possible graph anomalies include users connected to unusually many coupons, products linked to high-return users, dense user-coupon-product subgraphs, or abnormal bursts of interactions.
+Examples:
 
-A future tensor version could represent:
+- high activity users may require traffic/session inspection
+- low conversion users may require page, pricing, or recommendation analysis
+- high purchase signal users may be useful for retention or recommendation analysis
+- remove-from-cart anomalies may suggest product availability, pricing, or checkout issues
 
-- user x product x time behavior
-- user x product x behavior type
-- user x product x coupon x time
+Anomaly means behaviorally unusual. It does **not** mean fraud.
 
-The graph extension blueprint is documented in `docs/graph_extension.md`.
+## Project Structure
 
-## Limitations
-
-- The current dataset is synthetic.
-- Synthetic data is used for controlled validation, not evidence of real promotion behavior.
-- There are no real ground-truth anomaly labels.
-- The project does not claim to detect real fraud.
-- Unsupervised anomaly results require business validation.
-- The current version uses aggregated tabular features only.
-- The anomaly categories are rule-based interpretations, not verified labels.
-- The pseudo-anomaly experiment is a sanity check, not a real benchmark.
-- Real-data validation is the next step.
-
-## Future Work
-
-- Scale and inspect the RecSys Challenge 2025 / Synerise validation beyond the current sampled workflow.
-- Improve sampling strategies and raw event-history inspection for real event logs.
-- Aggregate additional real event fields into user-level features when available.
-- Build a user-product interaction graph from event logs.
-- Explore graph-based anomaly detection.
-- Represent user-product-time-behavior as a sparse tensor.
-- Compare additional unsupervised anomaly detection methods.
+```text
+.
+├── README.md
+├── requirements.txt
+├── data/
+│   ├── fixtures/
+│   └── synthetic_promotion_user_behavior.csv
+├── docs/
+│   ├── graph_extension.md
+│   ├── real_data_integration.md
+│   ├── real_data_roadmap.md
+│   └── research_notes.md
+├── figures/
+├── results/
+└── src/
+    ├── data_generator.py
+    ├── preprocessing.py
+    ├── clustering.py
+    ├── anomaly_detection.py
+    ├── experiments.py
+    ├── interpretation.py
+    ├── real_data_loader.py
+    ├── run_pipeline.py
+    └── run_real_data_pipeline.py
+```
 
 ## How to Run
 
@@ -326,13 +194,13 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the full pipeline:
+Run the synthetic pipeline:
 
 ```bash
 python src/run_pipeline.py
 ```
 
-Run a real-data format smoke test with the small fixture:
+Run a loader smoke test:
 
 ```bash
 python src/run_real_data_pipeline.py \
@@ -341,13 +209,43 @@ python src/run_real_data_pipeline.py \
   --loader-smoke-test
 ```
 
-Run the real-data pipeline after placing a CSV or parquet event log under `data/raw/`:
+Run the real-data pipeline after placing Synerise files under `data/raw/synerise/`:
 
 ```bash
 python src/run_real_data_pipeline.py \
   --dataset-type synerise \
   --input-file data/raw/synerise \
-  --sample-n-rows 100000
+  --sample-n-rows 300000
 ```
 
-See `docs/real_data_integration.md` for field mapping, dataset limitations, and interpretation guidance.
+To keep multiple experiment outputs, add an optional tag such as `--output-tag 300k`.
+
+Run the loader unit test:
+
+```bash
+python -m unittest tests/test_real_data_loader.py
+```
+
+## Limitations
+
+- Synthetic data is used for controlled workflow validation.
+- The Synerise validation uses a sampled event-log workflow, not the full natural traffic distribution.
+- There are no confirmed ground-truth anomaly labels.
+- The project does not claim to detect fraud.
+- Anomaly categories are rule-based interpretations, not verified business labels.
+- Current modeling uses aggregated tabular features rather than sequence, graph, or tensor models.
+
+## Future Work
+
+- Improve real-data sampling strategies and raw event-history inspection.
+- Calibrate interpretation thresholds on larger real-data samples.
+- Add more real event fields when available.
+- Build user-product interaction graph features from event logs.
+- Explore graph-based and tensor-based anomaly detection as later extensions.
+
+## Documentation
+
+- `docs/real_data_integration.md`: how real event logs are loaded and mapped to user-level features
+- `docs/research_notes.md`: research motivation and methodological notes
+- `docs/real_data_roadmap.md`: dataset strategy and real-data extension plan
+- `docs/graph_extension.md`: graph and tensor extension blueprint

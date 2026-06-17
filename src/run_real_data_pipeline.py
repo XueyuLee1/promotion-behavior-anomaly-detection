@@ -25,6 +25,7 @@ from real_data_loader import load_real_user_features
 DEFAULT_INPUT = PROJECT_ROOT / "data" / "raw" / "synerise"
 PROCESSED_PATH = PROJECT_ROOT / "data" / "processed" / "real_user_features.csv"
 RESULTS_PATH = PROJECT_ROOT / "results" / "real_user_behavior_with_anomalies.csv"
+REVIEW_SAMPLE_PATH = PROJECT_ROOT / "results" / "real_anomaly_review_sample.csv"
 SUMMARY_PATH = PROJECT_ROOT / "results" / "real_data_summary.md"
 FIGURE_PATH = PROJECT_ROOT / "figures" / "real_data_pca_anomalies.png"
 
@@ -52,6 +53,30 @@ REAL_FEATURE_COLUMNS = [
     "low_activity_indicator",
     "behavior_sparsity",
 ]
+
+
+def add_output_tag(path: Path, output_tag: str | None) -> Path:
+    if not output_tag:
+        return path
+    safe_tag = "".join(char if char.isalnum() or char in {"-", "_"} else "_" for char in output_tag)
+    return path.with_name(f"{path.stem}_{safe_tag}{path.suffix}")
+
+
+def build_output_paths(output_tag: str | None) -> dict[str, Path]:
+    return {
+        "processed": add_output_tag(PROCESSED_PATH, output_tag),
+        "results": add_output_tag(RESULTS_PATH, output_tag),
+        "review_sample": add_output_tag(REVIEW_SAMPLE_PATH, output_tag),
+        "summary": add_output_tag(SUMMARY_PATH, output_tag),
+        "figure": add_output_tag(FIGURE_PATH, output_tag),
+    }
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
 
 
 def prepare_real_feature_matrix(data: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
@@ -124,7 +149,7 @@ def add_real_actionable_interpretation(data: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([df, interpreted], axis=1)
 
 
-def save_real_anomaly_plot(data: pd.DataFrame) -> None:
+def save_real_anomaly_plot(data: pd.DataFrame, figure_path: Path) -> None:
     plt.figure(figsize=(9, 6))
     sns.scatterplot(
         data=data,
@@ -137,9 +162,41 @@ def save_real_anomaly_plot(data: pd.DataFrame) -> None:
     )
     plt.title("Real Event Data PCA Visualization of Anomalies")
     plt.tight_layout()
-    FIGURE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(FIGURE_PATH, dpi=180)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(figure_path, dpi=180)
     plt.close()
+
+
+def save_review_sample(data: pd.DataFrame, sample_path: Path, sample_size: int = 100) -> None:
+    sample_columns = [
+        "anomaly_score",
+        "anomaly_type",
+        "anomaly_evidence",
+        "suggested_action",
+        "event_count",
+        "view_count",
+        "cart_count",
+        "remove_from_cart_count",
+        "purchase_count",
+        "search_count",
+        "unique_items",
+        "active_days",
+        "price_signal_total",
+        "conversion_rate",
+        "cart_to_purchase_rate",
+        "cluster",
+    ]
+    available_columns = [column for column in sample_columns if column in data.columns]
+    review_sample = (
+        data[data["is_anomaly"] == 1]
+        .sort_values("anomaly_score", ascending=False)
+        .head(sample_size)
+        .loc[:, available_columns]
+        .reset_index(drop=True)
+    )
+    review_sample.insert(0, "review_user_id", [f"review_user_{index + 1:03d}" for index in review_sample.index])
+    sample_path.parent.mkdir(parents=True, exist_ok=True)
+    review_sample.to_csv(sample_path, index=False)
 
 
 def build_real_summary(
@@ -147,6 +204,7 @@ def build_real_summary(
     metadata: dict[str, object],
     feature_columns: list[str],
     silhouette_score: float,
+    review_sample_path: Path,
 ) -> str:
     anomaly_rate = data["is_anomaly"].mean()
     anomaly_counts = data["anomaly_type"].value_counts().rename_axis("anomaly_type").to_frame("count")
@@ -202,6 +260,7 @@ Unavailable fields are documented instead of being faked: {unavailable}.
 - The existing unsupervised workflow ran end-to-end on real event data without using anomaly labels.
 - The most common flagged patterns are summarized below as review categories, not confirmed fraud labels.
 - Because the Synerise sample is balanced across event files for workflow validation, behavior ratios should not be interpreted as full-site business conversion rates.
+- A small review-list sample is saved to `{display_path(review_sample_path)}` for inspection. The full real-user review list is generated locally and ignored by Git.
 
 ## Interpretable Anomaly Types
 
@@ -250,11 +309,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--loader-smoke-test", action="store_true", help="Only test loading and aggregation; do not save model results.")
     parser.add_argument("--n-clusters", type=int, default=5, help="Number of K-means clusters.")
     parser.add_argument("--contamination", type=float, default=0.08, help="Isolation Forest contamination rate.")
+    parser.add_argument("--output-tag", default=None, help="Optional suffix for output files, such as 100k or 300k.")
+    parser.add_argument("--review-sample-size", type=int, default=100, help="Number of anomalous users to save in the small review sample.")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    output_paths = build_output_paths(args.output_tag)
     try:
         user_features, metadata = load_real_user_features(
             args.input_file,
@@ -269,7 +331,7 @@ def main() -> int:
             event_col=args.event_col,
             price_col=args.price_col,
             session_col=args.session_col,
-            output_path=None if args.loader_smoke_test else PROCESSED_PATH,
+            output_path=None if args.loader_smoke_test else output_paths["processed"],
         )
     except (FileNotFoundError, ValueError, ImportError) as exc:
         print("Real-data pipeline could not start.", file=sys.stderr)
@@ -297,8 +359,8 @@ def main() -> int:
         print("Use a larger sample or a wider time window.", file=sys.stderr)
         return 1
 
-    PROCESSED_PATH.parent.mkdir(parents=True, exist_ok=True)
-    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    output_paths["processed"].parent.mkdir(parents=True, exist_ok=True)
+    output_paths["results"].parent.mkdir(parents=True, exist_ok=True)
     feature_matrix, feature_columns = prepare_real_feature_matrix(user_features)
 
     n_clusters = min(args.n_clusters, len(user_features) - 1)
@@ -312,15 +374,20 @@ def main() -> int:
     output["anomaly_score"] = anomaly_score.round(5)
     output = add_real_actionable_interpretation(output)
 
-    output.to_csv(RESULTS_PATH, index=False)
-    save_real_anomaly_plot(output)
-    SUMMARY_PATH.write_text(build_real_summary(output, metadata, feature_columns, silhouette), encoding="utf-8")
+    output.to_csv(output_paths["results"], index=False)
+    save_review_sample(output, output_paths["review_sample"], sample_size=args.review_sample_size)
+    save_real_anomaly_plot(output, output_paths["figure"])
+    output_paths["summary"].write_text(
+        build_real_summary(output, metadata, feature_columns, silhouette, output_paths["review_sample"]),
+        encoding="utf-8",
+    )
 
     print("Real-data pipeline finished successfully.")
-    print(f"Processed features saved to: {PROCESSED_PATH}")
-    print(f"Results saved to: {RESULTS_PATH}")
-    print(f"Summary saved to: {SUMMARY_PATH}")
-    print(f"Figure saved to: {FIGURE_PATH}")
+    print(f"Processed features saved to: {output_paths['processed']}")
+    print(f"Results saved to: {output_paths['results']}")
+    print(f"Review sample saved to: {output_paths['review_sample']}")
+    print(f"Summary saved to: {output_paths['summary']}")
+    print(f"Figure saved to: {output_paths['figure']}")
     return 0
 
 

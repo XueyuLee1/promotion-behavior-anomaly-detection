@@ -58,6 +58,7 @@ Unavailable fields are documented instead of being faked: coupon_usage, discount
 - The existing unsupervised workflow ran end-to-end on real event data without using anomaly labels.
 - The most common flagged patterns are summarized below as review categories, not confirmed fraud labels.
 - Because the Synerise sample is balanced across event files for workflow validation, behavior ratios should not be interpreted as full-site business conversion rates.
+- A small review-list sample is saved to `results/real_anomaly_review_sample.csv` for inspection. The full real-user review list is generated locally and ignored by Git.
 
 ## Interpretable Anomaly Types
 
